@@ -1,0 +1,2516 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>修仙世界NPC生成器 - 天道命运系统</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', 'STXihei', sans-serif;
+        }
+        
+        :root {
+            --primary-color: #5e35b1;
+            --secondary-color: #7e57c2;
+            --accent-color: #d500f9;
+            --dark-bg: #120e2b;
+            --card-bg: #1d1739;
+            --text-light: #e6e6ff;
+            --text-secondary: #a3a3c2;
+            --success-color: #00e676;
+            --warning-color: #ff9100;
+            --danger-color: #ff1744;
+            --dynasty-color: #ff6b6b;
+            --demonic-color: #ff7979;
+            --island-color: #74b9ff;
+            --buddha-color: #fdcb6e;
+            --tribal-color: #55efc4;
+            --mortal-color: #a1887f;
+            --cultivator-color: #4db6ac;
+            --immortal-color: #fbc02d;
+            --survival-color: #FF6B6B;
+            --self-interest-color: #4ECDC4;
+            --empathy-color: #FFD166;
+            --recognition-color: #6A0572;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--dark-bg) 0%, #1a237e 100%);
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><path d="M0,0 L100,0 L100,100 Z" fill="rgba(94,53,177,0.1)"/><path d="M0,0 L0,100 L100,100 Z" fill="rgba(94,53,177,0.1)"/></svg>');
+            color: var(--text-light);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(94, 53, 177, 0.5);
+            position: relative;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            color: var(--text-light);
+            text-shadow: 0 0 15px rgba(213, 0, 249, 0.7);
+            margin-bottom: 10px;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+        
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.3rem;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+        
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1.2fr 1.8fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 1200px) {
+            .grid-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .panel {
+            background: rgba(29, 23, 57, 0.9);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(94, 53, 177, 0.5);
+            transition: all 0.3s ease;
+        }
+        
+        .panel:hover {
+            box-shadow: 0 12px 40px rgba(213, 0, 249, 0.3);
+        }
+        
+        .panel-title {
+            font-size: 1.6rem;
+            margin-bottom: 20px;
+            color: #bb86fc;
+            display: flex;
+            align-items: center;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(126, 87, 194, 0.3);
+        }
+        
+        .panel-title i {
+            margin-right: 10px;
+            font-size: 1.6rem;
+            color: var(--accent-color);
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        
+        label {
+            min-width: 120px;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+        
+        input, select {
+            background: rgba(26, 26, 46, 0.7);
+            border: 1px solid var(--primary-color);
+            border-radius: 10px;
+            padding: 12px 18px;
+            color: var(--text-light);
+            flex: 1;
+            font-size: 1.05rem;
+            transition: all 0.3s ease;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(213, 0, 249, 0.3);
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 24px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 120px;
+            font-weight: 500;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px rgba(156, 39, 176, 0.5);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+        }
+        
+        button.secondary {
+            background: rgba(26, 26, 46, 0.7);
+            border: 1px solid var(--primary-color);
+        }
+        
+        button.secondary:hover {
+            background: rgba(94, 53, 177, 0.3);
+        }
+        
+        .random-btn {
+            padding: 12px;
+            min-width: 50px;
+            font-size: 1.2rem;
+        }
+        
+        .tag-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .tag {
+            background: rgba(126, 87, 194, 0.2);
+            border: 1px solid #7e57c2;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 0.95rem;
+        }
+        
+        .character-type-tag {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-left: 10px;
+        }
+        
+        .mortal-tag {
+            background: rgba(161, 136, 127, 0.3);
+            border: 1px solid var(--mortal-color);
+            color: var(--mortal-color);
+        }
+        
+        .cultivator-tag {
+            background: rgba(77, 182, 172, 0.3);
+            border: 1px solid var(--cultivator-color);
+            color: var(--cultivator-color);
+        }
+        
+        .immortal-tag {
+            background: rgba(251, 192, 45, 0.3);
+            border: 1px solid var(--immortal-color);
+            color: var(--immortal-color);
+        }
+        
+        .success-message {
+            background: rgba(0, 230, 118, 0.15);
+            border: 1px solid var(--success-color);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        #destiny-output {
+            background: rgba(26, 26, 46, 0.5);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            min-height: 300px;
+            overflow-y: auto;
+            border: 1px solid rgba(94, 53, 177, 0.3);
+            line-height: 1.8;
+        }
+        
+        .destiny-title {
+            color: #bb86fc;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .destiny-text {
+            line-height: 1.8;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+        
+        .highlight {
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+        
+        .life-event {
+            margin: 10px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .life-event:before {
+            content: "•";
+            color: var(--accent-color);
+            position: absolute;
+            left: 0;
+            font-size: 1.5rem;
+        }
+        
+        #network-container {
+            width: 100%;
+            height: 500px;
+            background: rgba(10, 8, 26, 0.7);
+            border-radius: 10px;
+            border: 1px solid rgba(94, 53, 177, 0.5);
+            margin-top: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .control-btn {
+            background: rgba(26, 26, 46, 0.7);
+            border: 1px solid var(--primary-color);
+            border-radius: 8px;
+            padding: 8px 15px;
+            min-width: auto;
+            font-size: 1.1rem;
+        }
+        
+        .legend {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            font-size: 0.95rem;
+        }
+        
+        .legend-color {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            margin-right: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .visualization-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+            margin-top: 25px;
+        }
+        
+        @media (max-width: 1200px) {
+            .visualization-row {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .chart-container {
+            height: 320px;
+            background: rgba(29, 23, 57, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(94, 53, 177, 0.5);
+            position: relative;
+        }
+        
+        .spirit-root-info {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 1.2rem;
+            color: #f1fa8c;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 0 0 15px 15px;
+        }
+
+        .timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .timeline-event {
+            background: rgba(94, 53, 177, 0.15);
+            border-radius: 10px;
+            padding: 15px;
+            border-left: 4px solid var(--accent-color);
+            position: relative;
+        }
+        
+        .timeline-year {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(213, 0, 249, 0.2);
+            border-radius: 20px;
+            padding: 3px 12px;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+        
+        .timeline-region {
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .dynasty-badge {
+            background: rgba(255, 107, 107, 0.2);
+            color: var(--dynasty-color);
+        }
+        
+        .demonic-badge {
+            background: rgba(255, 121, 121, 0.2);
+            color: var(--demonic-color);
+        }
+        
+        .island-badge {
+            background: rgba(116, 185, 255, 0.2);
+            color: var(--island-color);
+        }
+        
+        .buddha-badge {
+            background: rgba(253, 203, 110, 0.2);
+            color: var(--buddha-color);
+        }
+        
+        .tribal-badge {
+            background: rgba(85, 239, 196, 0.2);
+            color: var(--tribal-color);
+        }
+        
+        .timeline-impact {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed rgba(163, 163, 194, 0.3);
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+        
+        /* 弹窗样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 15px;
+            width: 90%;
+            max-width: 800px;
+            padding: 30px;
+            border: 2px solid var(--accent-color);
+            box-shadow: 0 0 30px rgba(213, 0, 249, 0.5);
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.8rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .close-modal:hover {
+            color: var(--accent-color);
+            transform: rotate(90deg);
+        }
+        
+        .modal-title {
+            color: #bb86fc;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .character-bio {
+            background: rgba(26, 26, 46, 0.5);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 1px solid rgba(94, 53, 177, 0.3);
+            line-height: 1.8;
+        }
+        
+        .personality-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .personality-tag {
+            background: rgba(126, 87, 194, 0.3);
+            border: 1px solid #7e57c2;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 1rem;
+        }
+        
+        .character-details-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .character-details-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .detail-card {
+            background: rgba(94, 53, 177, 0.15);
+            border-radius: 10px;
+            padding: 15px;
+            border-left: 4px solid var(--accent-color);
+        }
+        
+        .detail-card h3 {
+            color: #bb86fc;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .profession-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 15px;
+            background: rgba(77, 182, 172, 0.2);
+            border: 1px solid var(--cultivator-color);
+            color: var(--cultivator-color);
+            margin-right: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .cultivation-level {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 15px;
+            background: rgba(251, 192, 45, 0.2);
+            border: 1px solid var(--immortal-color);
+            color: var(--immortal-color);
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        
+        /* 新增：基础框架属性样式 */
+        .framework-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(26, 26, 46, 0.5);
+            border-radius: 10px;
+            border: 1px solid rgba(126, 87, 194, 0.3);
+        }
+        
+        .framework-title {
+            color: #bb86fc;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .framework-item {
+            margin-bottom: 12px;
+        }
+        
+        .framework-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 1rem;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 5px;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+        
+        .survival-progress {
+            background: linear-gradient(to right, var(--survival-color), #ff9e9e);
+        }
+        
+        .interest-progress {
+            background: linear-gradient(to right, var(--self-interest-color), #88f0e8);
+        }
+        
+        .empathy-progress {
+            background: linear-gradient(to right, var(--empathy-color), #ffe08a);
+        }
+        
+        .recognition-progress {
+            background: linear-gradient(to right, var(--recognition-color), #9d4edd);
+        }
+        
+        /* 新增：修炼体系样式 */
+        .cultivation-system {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .cultivation-stage {
+            background: rgba(94, 53, 177, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid rgba(126, 87, 194, 0.3);
+        }
+        
+        .stage-name {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #f1fa8c;
+        }
+        
+        .stage-info {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        .current-stage {
+            background: rgba(77, 182, 172, 0.3);
+            border-color: var(--cultivator-color);
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(77, 182, 172, 0.5);
+        }
+        
+        /* 响应式布局调整 */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .panel {
+                padding: 20px;
+            }
+            
+            .input-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            label {
+                margin-bottom: 5px;
+            }
+            
+            input, select {
+                width: 100%;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+        }
+        
+        .network-placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #a3a3c2;
+            font-size: 1.1rem;
+        }
+        
+        .network-placeholder i {
+            font-size: 4rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+        
+        /* 新增：地域时间线样式 */
+        .region-timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        
+        .region-event {
+            background: rgba(94, 53, 177, 0.15);
+            border-radius: 10px;
+            padding: 15px;
+            border-left: 4px solid var(--accent-color);
+            position: relative;
+        }
+        
+        .region-period {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(213, 0, 249, 0.2);
+            border-radius: 20px;
+            padding: 3px 12px;
+            font-weight: bold;
+            color: var(--accent-color);
+            font-size: 0.9rem;
+        }
+        
+        .region-name {
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .region-description {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+        
+        /* 因果网络节点样式 */
+        .node {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .node:hover circle {
+            r: 32;
+            stroke-width: 3;
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.7));
+        }
+        
+        .node-text {
+            pointer-events: none;
+            user-select: none;
+            font-size: 10px;
+            text-anchor: middle;
+            fill: white;
+            font-weight: bold;
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+        }
+        
+        .node-cultivation {
+            pointer-events: none;
+            user-select: none;
+            font-size: 8px;
+            text-anchor: middle;
+            fill: #ddd;
+            text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+        }
+        
+        .link {
+            stroke: rgba(255, 255, 255, 0.5);
+            stroke-width: 1.5;
+            stroke-opacity: 0.6;
+        }
+        
+        .link-label {
+            font-size: 9px;
+            fill: #f1fa8c;
+            text-anchor: middle;
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+            pointer-events: none;
+        }
+        
+        .tooltip {
+            position: absolute;
+            background: rgba(29, 23, 57, 0.95);
+            border: 1px solid var(--accent-color);
+            border-radius: 8px;
+            padding: 10px;
+            pointer-events: none;
+            z-index: 10;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            max-width: 300px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .tooltip-title {
+            font-weight: bold;
+            color: #bb86fc;
+            margin-bottom: 5px;
+            font-size: 1.1rem;
+        }
+        
+        .tooltip-content {
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        
+        /* 新增：修为进度条 */
+        .cultivation-progress {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        
+        .cultivation-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00e676, #00b248);
+            border-radius: 4px;
+        }
+        
+        /* 新增：境界标签 */
+        .realm-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            margin-left: 10px;
+            background: rgba(126, 87, 194, 0.2);
+            border: 1px solid #7e57c2;
+        }
+        
+        /* 新增：命批诗句样式 */
+        .poem-container {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(94, 53, 177, 0.15);
+            border-radius: 10px;
+            border-left: 4px solid #fbc02d;
+            text-align: center;
+            font-style: italic;
+            font-size: 1.2rem;
+            line-height: 1.8;
+            color: #f1fa8c;
+        }
+        
+        .poem-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #bb86fc;
+            font-size: 1.3rem;
+        }
+        
+        /* 新增：灵根按钮样式 */
+        .spirit-root-btn {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #9c27b0 0%, #e91e63 100%);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 20px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+        
+        .spirit-root-btn:hover {
+            transform: translateX(-50%) translateY(-3px);
+            box-shadow: 0 5px 15px rgba(156, 39, 176, 0.5);
+        }
+        
+        /* 新增：灵根弹窗样式 */
+        #spirit-root-modal .modal-content {
+            max-width: 600px;
+        }
+        
+        .spirit-root-details {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spirit-root-title {
+            font-size: 1.5rem;
+            color: #bb86fc;
+            margin-bottom: 20px;
+        }
+        
+        .spirit-root-description {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            color: var(--text-light);
+        }
+        
+        .element-info {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .element-item {
+            background: rgba(94, 53, 177, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            min-width: 100px;
+        }
+        
+        .element-name {
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .element-value {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #f1fa8c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-dragon"></i> 修仙世界NPC生成器</h1>
+            <div class="subtitle">
+                基于周易八卦演算与天道命运系统，生成多样化的修仙世界角色
+            </div>
+        </header>
+        
+        <div class="grid-layout">
+            <div class="panel">
+                <div class="panel-title">
+                    <i class="fas fa-user-circle"></i> NPC基本信息
+                </div>
+                
+                <div class="input-group">
+                    <div class="input-row">
+                        <label><i class="fas fa-signature"></i> 角色姓名</label>
+                        <input type="text" id="character-name" value="凌风">
+                        <button class="random-btn secondary" id="random-name">
+                            <i class="fas fa-dice"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="input-row">
+                        <label><i class="fas fa-calendar-alt"></i> 出生年份</label>
+                        <input type="number" id="year" min="1500" max="1800" value="1580">
+                        <button class="random-btn secondary" id="random-year">
+                            <i class="fas fa-dice"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="input-row">
+                        <label><i class="fas fa-moon"></i> 出生月份</label>
+                        <select id="month">
+                            <option value="1">正月</option>
+                            <option value="2">二月</option>
+                            <option value="3" selected>三月</option>
+                            <option value="4">四月</option>
+                            <option value="5">五月</option>
+                            <option value="6">六月</option>
+                            <option value="7">七月</option>
+                            <option value="8">八月</option>
+                            <option value="9">九月</option>
+                            <option value="10">十月</option>
+                            <option value="11">冬月</option>
+                            <option value="12">腊月</option>
+                        </select>
+                        <button class="random-btn secondary" id="random-month">
+                            <i class="fas fa-dice"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="input-row">
+                        <label><i class="fas fa-sun"></i> 出生日期</label>
+                        <input type="number" id="day" min="1" max="31" value="15">
+                        <button class="random-btn secondary" id="random-day">
+                            <i class="fas fa-dice"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="input-row">
+                        <label><i class="fas fa-clock"></i> 出生时辰</label>
+                        <select id="hour">
+                            <option value="0">子时 (23-1)</option>
+                            <option value="1">丑时 (1-3)</option>
+                            <option value="2">寅时 (3-5)</option>
+                            <option value="3">卯时 (5-7)</option>
+                            <option value="4">辰时 (7-9)</option>
+                            <option value="5">巳时 (9-11)</option>
+                            <option value="6">午时 (11-13)</option>
+                            <option value="7" selected>未时 (13-15)</option>
+                            <option value="8">申时 (15-17)</option>
+                            <option value="9">酉时 (17-19)</option>
+                            <option value="10">戌时 (19-21)</option>
+                            <option value="11">亥时 (21-23)</option>
+                        </select>
+                        <button class="random-btn secondary" id="random-hour">
+                            <i class="fas fa-dice"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="input-row">
+                        <label><i class="fas fa-venus-mars"></i> 性别</label>
+                        <select id="gender">
+                            <option value="male">男性</option>
+                            <option value="female" selected>女性</option>
+                            <option value="neutral">无性别</option>
+                        </select>
+                        <button class="random-btn secondary" id="random-gender">
+                            <i class="fas fa-dice"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="input-row">
+                        <label><i class="fas fa-map-marker-alt"></i> 出生地</label>
+                        <select id="birthplace">
+                            <option value="王朝">修真王朝</option>
+                            <option value="魔域">魔道血狱</option>
+                            <option value="仙岛" selected>海外仙岛</option>
+                            <option value="佛国">佛国净土</option>
+                            <option value="蛮荒">蛮荒部落</option>
+                            <option value="灵界">灵界</option>
+                        </select>
+                        <button class="random-btn secondary" id="random-birthplace">
+                            <i class="fas fa-dice"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="input-row">
+                        <label><i class="fas fa-tools"></i> 职业</label>
+                        <select id="profession">
+                            <option value="无">无</option>
+                            <option value="炼丹师">炼丹师</option>
+                            <option value="炼器师">炼器师</option>
+                            <option value="阵法师" selected>阵法师</option>
+                            <option value="制符师">制符师</option>
+                            <option value="灵具师">灵具师</option>
+                            <option value="灵植夫">灵植夫</option>
+                            <option value="御兽师">御兽师</option>
+                        </select>
+                        <button class="random-btn secondary" id="random-profession">
+                            <i class="fas fa-dice"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="input-row">
+                        <label><i class="fas fa-mountain"></i> 修为</label>
+                        <select id="cultivation-level">
+                            <option value="无">无</option>
+                            <option value="炼气期">炼气期</option>
+                            <option value="筑基期" selected>筑基期</option>
+                            <option value="结丹期">结丹期</option>
+                            <option value="元婴期">元婴期</option>
+                            <option value="化神期">化神期</option>
+                            <option value="炼虚期">炼虚期</option>
+                            <option value="合体期">合体期</option>
+                            <option value="大乘期">大乘期</option>
+                            <option value="真仙境">真仙境</option>
+                            <option value="金仙境">金仙境</option>
+                            <option value="太乙境">太乙境</option>
+                            <option value="大罗境">大罗境</option>
+                            <option value="道祖境">道祖境</option>
+                        </select>
+                        <button class="random-btn secondary" id="random-cultivation-level">
+                            <i class="fas fa-dice"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="btn-group">
+                        <button id="random-all">
+                            <i class="fas fa-random"></i> 全部随机生成
+                        </button>
+                        <button id="generate-npc" style="background: linear-gradient(135deg, #e91e63 0%, #9c27b0 100%);">
+                            <i class="fas fa-magic"></i> 生成NPC角色
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 基础框架属性面板 -->
+                <div class="framework-panel">
+                    <div class="framework-title">
+                        <i class="fas fa-brain"></i> 人性基础框架
+                    </div>
+                    <div class="framework-item">
+                        <div class="framework-label">
+                            <span>求生本能</span>
+                            <span id="survival-value">75%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill survival-progress" id="survival-progress" style="width: 75%"></div>
+                        </div>
+                    </div>
+                    <div class="framework-item">
+                        <div class="framework-label">
+                            <span>趋利避害</span>
+                            <span id="interest-value">60%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill interest-progress" id="interest-progress" style="width: 60%"></div>
+                        </div>
+                    </div>
+                    <div class="framework-item">
+                        <div class="framework-label">
+                            <span>同理心</span>
+                            <span id="empathy-value">45%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill empathy-progress" id="empathy-progress" style="width: 45%"></div>
+                        </div>
+                    </div>
+                    <div class="framework-item">
+                        <div class="framework-label">
+                            <span>渴望认同</span>
+                            <span id="recognition-value">85%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill recognition-progress" id="recognition-progress" style="width: 85%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="panel-title">
+                    <i class="fas fa-tags"></i> 人格特质
+                </div>
+                <div class="tag-container" id="personality-tags">
+                    <div class="tag">谨慎保守</div>
+                    <div class="tag">精于算计</div>
+                    <div class="tag">重视名声</div>
+                    <div class="tag">天资聪颖</div>
+                </div>
+                
+                <div class="success-message" id="success-message">
+                    <i class="fas fa-check-circle" style="color: var(--success-color); font-size: 1.8rem;"></i>
+                    <div>
+                        <div style="font-size: 1.2rem; font-weight: bold; color: var(--success-color);">NPC生成成功！</div>
+                        <div>新角色已加入因果网络，点击关系节点查看详情</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 右侧：生平概述 -->
+            <div class="panel">
+                <div class="panel-title">
+                    <i class="fas fa-book"></i> 生平概述
+                </div>
+                <div id="destiny-output">
+                    <div class="destiny-title">
+                        <i class="fas fa-scroll"></i> 角色生平
+                    </div>
+                    <div class="destiny-text">
+                        <p><strong>姓名：</strong>凌风（女）<span class="character-type-tag cultivator-tag">修仙者</span></p>
+                        <p><strong>出生背景：</strong>1580年三月15日未时出生于海外仙岛，修真小家族旁系，父母皆为炼气期修士。</p>
+                        <p><strong>职业专长：</strong>阵法师</p>
+                        <p><strong>修为境界：</strong>筑基期</p>
+                        <p><strong>基础框架：</strong>求生本能(75%), 趋利避害(60%), 同理心(45%), 渴望认同(85%)</p>
+                    </div>
+                    <div class="destiny-text">
+                        <p><strong>生平轨迹：</strong></p>
+                        <div class="life-event"><strong>16岁：</strong>意外获得修真入门功法，踏上修仙之路</div>
+                        <div class="life-event"><strong>42岁：</strong>道侣背叛，道心受损，修为停滞十年</div>
+                        <div class="life-event"><strong>75岁：</strong>收得意弟子，传承自身道法</div>
+                        <div class="life-event"><strong>92岁：</strong>突破元婴期，成为一方大能，开宗立派</div>
+                    </div>
+                    <!-- 命批诗句 -->
+                    <div class="poem-container">
+                        <div class="poem-title">命批诗句</div>
+                        <div id="destiny-poem">九霄云外有仙缘，半生修道半生缘；<br>一朝悟得长生道，笑看红尘三千年。</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 五行命格蜂网图 -->
+        <div class="visualization-row">
+            <div class="panel">
+                <div class="panel-title">
+                    <i class="fas fa-star-and-crescent"></i> 五行命格蜂网图
+                </div>
+                <div class="chart-container">
+                    <canvas id="fate-chart"></canvas>
+                    <button class="spirit-root-btn" id="show-spirit-root">
+                        <i class="fas fa-seedling"></i> 查看灵根属性
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 因果关联网络 -->
+        <div class="panel">
+            <div class="panel-title">
+                <i class="fas fa-project-diagram"></i> 因果关联网络
+            </div>
+            <div id="network-container">
+                <div class="network-placeholder">
+                    <i class="fas fa-project-diagram"></i>
+                    <p>请生成角色后查看因果网络</p>
+                </div>
+            </div>
+            <div class="controls">
+                <button class="control-btn" id="regenerate-relations">
+                    <i class="fas fa-redo"></i> 重新生成关系
+                </button>
+                <button class="control-btn" id="zoom-in">
+                    <i class="fas fa-plus"></i> 放大
+                </button>
+                <button class="control-btn" id="zoom-out">
+                    <i class="fas fa-minus"></i> 缩小
+                </button>
+                <button class="control-btn" id="reset-view">
+                    <i class="fas fa-sync-alt"></i> 重置视图
+                </button>
+            </div>
+            
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #ff79c6;"></div>
+                    <span>当前NPC</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #50fa7b;"></div>
+                    <span>血缘关系</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #f1fa8c;"></div>
+                    <span>师徒关系</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #ff5555;"></div>
+                    <span>仇敌关系</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #bd93f9;"></div>
+                    <span>道侣关系</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #8be9fd;"></div>
+                    <span>同门关系</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 地域时间线 -->
+        <div class="panel">
+            <div class="panel-title">
+                <i class="fas fa-map-marked-alt"></i> 地域时间线
+            </div>
+            <div class="region-timeline" id="region-timeline">
+                <div class="region-event">
+                    <div class="region-name">
+                        <i class="fas fa-map-marker-alt"></i> 海外仙岛
+                    </div>
+                    <div class="region-period">1580-1600年</div>
+                    <div class="region-description">
+                        凌风在此出生并度过童年，仙岛灵气充沛，为修炼打下良好基础。期间遭遇海妖袭击，被神秘修士所救。
+                    </div>
+                </div>
+                <div class="region-event">
+                    <div class="region-name">
+                        <i class="fas fa-mountain"></i> 天剑宗
+                    </div>
+                    <div class="region-period">1600-1645年</div>
+                    <div class="region-description">
+                        拜入天剑宗修炼剑道，成为内门弟子。期间参与宗门大比获得第三名，获赠上品灵剑。
+                    </div>
+                </div>
+                <div class="region-event">
+                    <div class="region-name">
+                        <i class="fas fa-skull"></i> 魔渊禁地
+                    </div>
+                    <div class="region-period">1645-1650年</div>
+                    <div class="region-description">
+                        为寻找突破契机冒险进入魔渊禁地，遭遇魔修围攻，损失本命法宝后侥幸逃脱。
+                    </div>
+                </div>
+                <div class="region-event">
+                    <div class="region-name">
+                        <i class="fas fa-tree"></i> 万木森林
+                    </div>
+                    <div class="region-period">1650-1680年</div>
+                    <div class="region-description">
+                        在森林深处隐居修炼，参悟自然之道，结识木灵族长老，习得上古阵法。
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 修仙体系展示 -->
+        <div class="panel">
+            <div class="panel-title">
+                <i class="fas fa-stairs"></i> 修仙境界体系
+            </div>
+            <div class="cultivation-system" id="cultivation-system">
+                <!-- 动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 角色详情模态框 -->
+    <div class="modal" id="character-modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="modal-title">角色详情</div>
+            <div id="modal-content">
+                <!-- 动态内容 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 灵根详情模态框 -->
+    <div class="modal" id="spirit-root-modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="modal-title">灵根属性详情</div>
+            <div class="spirit-root-details">
+                <div class="spirit-root-title" id="spirit-root-title">金火双灵根</div>
+                <div class="spirit-root-description" id="spirit-root-description">
+                    此灵根蕴含金火双重属性，金主杀伐，火主毁灭，两者结合形成强大的攻击性灵根。
+                    拥有此灵根者，在金属性和火属性功法上修炼速度远超常人，尤其擅长攻击类法术。
+                </div>
+                <div class="element-info">
+                    <div class="element-item">
+                        <div class="element-name">金</div>
+                        <div class="element-value">85%</div>
+                    </div>
+                    <div class="element-item">
+                        <div class="element-name">木</div>
+                        <div class="element-value">45%</div>
+                    </div>
+                    <div class="element-item">
+                        <div class="element-name">水</div>
+                        <div class="element-value">30%</div>
+                    </div>
+                    <div class="element-item">
+                        <div class="element-name">火</div>
+                        <div class="element-value">75%</div>
+                    </div>
+                    <div class="element-item">
+                        <div class="element-name">土</div>
+                        <div class="element-value">60%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 关系提示工具 -->
+    <div class="tooltip" id="relation-tooltip"></div>
+
+    <script>
+        // 全局变量
+        let fateChart = null;
+        let currentCharacterName = "凌风";
+        let zoomLevel = 1;
+        let birthYear = 1580;
+        let deathYear = 1680;
+        let simulation = null;
+        let currentCharacterCultivation = "筑基期";
+        let currentSpiritRoot = "金火双灵根";
+        let spiritRootDescription = "";
+        
+        // 关系类型库
+        const relationTypes = [
+            { type: "师徒", color: "#f1fa8c", name: "师父/徒弟" },
+            { type: "道侣", color: "#bd93f9", name: "道侣" },
+            { type: "同门", color: "#8be9fd", name: "师兄/师弟" },
+            { type: "仇敌", color: "#ff5555", name: "仇敌" },
+            { type: "血缘", color: "#50fa7b", name: "亲人" },
+            { type: "恩人", color: "#ffb86c", name: "恩人" },
+            { type: "盟友", color: "#ff79c6", name: "盟友" },
+            { type: "宿敌", color: "#ff6b6b", name: "宿敌" }
+        ];
+        
+        // 灵根描述库
+        const spiritRootDescriptions = {
+            "金火双灵根": "此灵根蕴含金火双重属性，金主杀伐，火主毁灭，两者结合形成强大的攻击性灵根。拥有此灵根者，在金属性和火属性功法上修炼速度远超常人，尤其擅长攻击类法术。",
+            "水木双灵根": "水木相生，滋养万物，此灵根蕴含强大的生命力。拥有者擅长治疗、防御和自然法术，在炼丹和灵植方面有特殊天赋。",
+            "土金双灵根": "土生金，厚重而坚固，此灵根拥有强大的防御力和炼器天赋。拥有者在土系防御法术和金系攻击法术上都有出色表现。",
+            "雷系异灵根": "罕见的变异灵根，蕴含天雷之力。拥有者修炼雷系功法速度惊人，攻击力强大，但容易心魔缠身，需谨守本心。",
+            "冰风异灵根": "冰风结合，速度与寒冰的完美融合。拥有者擅长速度类法术和冰系控制法术，在身法和控制方面有独特优势。",
+            "五行混沌灵根": "传说中的完美灵根，五行俱全且平衡。拥有者修炼任何功法都事半功倍，但突破境界时需承受五行天劫。"
+        };
+        
+        // 命批诗句库
+        const destinyPoems = [
+            "九霄云外有仙缘，半生修道半生缘；一朝悟得长生道，笑看红尘三千年。",
+            "剑气纵横三万里，一剑光寒十九州；踏破虚空寻真我，只身独闯九重天。",
+            "魔渊深处藏玄机，生死一线悟真谛；道心坚定破万难，终成一代魔道尊。",
+            "青莲出水尘不染，佛光普照度苍生；一念慈悲一念劫，菩提树下证金身。",
+            "蛮荒古地寻真道，百战余生意志坚；血染征袍终不悔，封神台上留威名。",
+            "灵根天成非俗物，五行齐聚大道通；劫雷淬体金身就，逍遥天地任我行。",
+            "丹炉火旺炼真元，九转金丹大道成；寿与天齐非妄语，笑看人间几度春。",
+            "阵纹流转天地变，八卦九宫藏玄机；挥手布下乾坤阵，困仙诛魔一念间。"
+        ];
+
+        // 初始化图表
+        function initCharts() {
+            const elements = ['金', '木', '水', '火', '土'];
+            const elementColors = ['#ffb86c', '#50fa7b', '#8be9fd', '#ff5555', '#bd93f9'];
+            
+            // 五行命格蜂网图
+            const fateCtx = document.getElementById('fate-chart').getContext('2d');
+            fateChart = new Chart(fateCtx, {
+                type: 'radar',
+                data: {
+                    labels: elements,
+                    datasets: [{
+                        label: '五行强度',
+                        data: [85, 45, 30, 75, 60],
+                        backgroundColor: 'rgba(156, 39, 176, 0.2)',
+                        borderColor: '#9c27b0',
+                        pointBackgroundColor: elementColors,
+                        pointBorderColor: '#fff',
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    scales: {
+                        r: {
+                            angleLines: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            grid: {
+                                color: 'rgba(106, 13, 173, 0.3)'
+                            },
+                            pointLabels: {
+                                color: '#e6e6ff',
+                                font: {
+                                    size: 14,
+                                    family: "'Microsoft YaHei', sans-serif"
+                                }
+                            },
+                            ticks: {
+                                backdropColor: 'transparent',
+                                color: 'rgba(163, 163, 194, 0.5)',
+                                stepSize: 20
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 100
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+            
+            // 初始化修仙境界体系
+            createCultivationSystem();
+        }
+        
+        // 创建修仙境界体系
+        function createCultivationSystem() {
+            const system = document.getElementById('cultivation-system');
+            system.innerHTML = '';
+            
+            const stages = [
+                { name: "凡人", lifespan: "100年", difficulty: "0%" },
+                { name: "炼气期", lifespan: "120年", difficulty: "30%" },
+                { name: "筑基期", lifespan: "200年", difficulty: "50%" },
+                { name: "结丹期", lifespan: "500年", difficulty: "70%" },
+                { name: "元婴期", lifespan: "1000年", difficulty: "85%" },
+                { name: "化神期", lifespan: "2000年", difficulty: "92%" },
+                { name: "炼虚期", lifespan: "5000年", difficulty: "96%" },
+                { name: "合体期", lifespan: "10000年", difficulty: "98%" },
+                { name: "大乘期", lifespan: "20000年", difficulty: "99%" },
+                { name: "真仙境", lifespan: "50000年", difficulty: "99.9%" }
+            ];
+            
+            stages.forEach(stage => {
+                const stageDiv = document.createElement('div');
+                stageDiv.className = 'cultivation-stage';
+                stageDiv.innerHTML = `
+                    <div class="stage-name">${stage.name}</div>
+                    <div class="stage-info">寿命: ${stage.lifespan}</div>
+                    <div class="stage-info">突破难度: ${stage.difficulty}</div>
+                `;
+                system.appendChild(stageDiv);
+            });
+        }
+        
+        // 初始化事件监听
+        function initEventListeners() {
+            // 随机按钮事件
+            document.querySelectorAll('.random-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const targetId = this.id.replace('random-', '');
+                    randomizeField(targetId);
+                });
+            });
+            
+            // 全部随机按钮
+            document.getElementById('random-all').addEventListener('click', function() {
+                randomizeAll();
+            });
+            
+            // 生成NPC按钮
+            document.getElementById('generate-npc').addEventListener('click', function() {
+                generateNPC();
+            });
+            
+            // 关闭模态框
+            document.querySelectorAll('.close-modal').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.modal').forEach(modal => {
+                        modal.style.display = "none";
+                    });
+                });
+            });
+            
+            // 网络控制按钮
+            document.getElementById('regenerate-relations').addEventListener('click', function() {
+                generateRelationshipNetwork();
+            });
+            
+            // 网络缩放功能
+            const networkContainer = document.getElementById('network-container');
+            
+            document.getElementById('zoom-in').addEventListener('click', function() {
+                zoomLevel = Math.min(zoomLevel * 1.2, 3);
+                networkContainer.style.transform = `scale(${zoomLevel})`;
+            });
+            
+            document.getElementById('zoom-out').addEventListener('click', function() {
+                zoomLevel = Math.max(zoomLevel / 1.2, 0.5);
+                networkContainer.style.transform = `scale(${zoomLevel})`;
+            });
+            
+            document.getElementById('reset-view').addEventListener('click', function() {
+                zoomLevel = 1;
+                networkContainer.style.transform = `scale(${zoomLevel})`;
+            });
+            
+            // 灵根按钮点击事件
+            document.getElementById('show-spirit-root').addEventListener('click', function() {
+                showSpiritRootModal();
+            });
+        }
+        
+        // 随机化单个字段
+        function randomizeField(fieldId) {
+            if (fieldId === 'name') {
+                const names = ['凌风', '紫萱', '玄霄', '青阳', '月华', '若水', '墨尘', '星魂', '云瑶', '飞羽'];
+                document.getElementById('character-name').value = names[Math.floor(Math.random() * names.length)];
+            } 
+            else if (fieldId === 'year') {
+                document.getElementById('year').value = Math.floor(Math.random() * 200) + 1500;
+            } 
+            else if (fieldId === 'month') {
+                const options = document.getElementById('month').options;
+                document.getElementById('month').selectedIndex = Math.floor(Math.random() * options.length);
+            } 
+            else if (fieldId === 'day') {
+                document.getElementById('day').value = Math.floor(Math.random() * 28) + 1;
+            } 
+            else if (fieldId === 'hour') {
+                const options = document.getElementById('hour').options;
+                document.getElementById('hour').selectedIndex = Math.floor(Math.random() * options.length);
+            }
+            else if (fieldId === 'gender') {
+                const options = document.getElementById('gender').options;
+                document.getElementById('gender').selectedIndex = Math.floor(Math.random() * options.length);
+            }
+            else if (fieldId === 'birthplace') {
+                const options = document.getElementById('birthplace').options;
+                document.getElementById('birthplace').selectedIndex = Math.floor(Math.random() * options.length);
+            }
+            else if (fieldId === 'profession') {
+                const options = document.getElementById('profession').options;
+                document.getElementById('profession').selectedIndex = Math.floor(Math.random() * options.length);
+            }
+            else if (fieldId === 'cultivation-level') {
+                const options = document.getElementById('cultivation-level').options;
+                document.getElementById('cultivation-level').selectedIndex = Math.floor(Math.random() * options.length);
+            }
+        }
+        
+        // 随机化所有字段
+        function randomizeAll() {
+            ['name', 'year', 'month', 'day', 'hour', 'gender', 'birthplace', 'profession', 'cultivation-level'].forEach(fieldId => {
+                randomizeField(fieldId);
+            });
+            generateNPC();
+        }
+        
+        // 生成NPC
+        function generateNPC() {
+            currentCharacterName = document.getElementById('character-name').value;
+            birthYear = parseInt(document.getElementById('year').value);
+            const gender = document.getElementById('gender').value;
+            const birthplace = document.getElementById('birthplace').value;
+            const profession = document.getElementById('profession').value;
+            currentCharacterCultivation = document.getElementById('cultivation-level').value;
+            const year = document.getElementById('year').value;
+            const month = document.getElementById('month').options[document.getElementById('month').selectedIndex].text;
+            const day = document.getElementById('day').value;
+            const hour = document.getElementById('hour').options[document.getElementById('hour').selectedIndex].text;
+            
+            // 根据修为估算死亡年份
+            deathYear = birthYear + calculateLifespan(currentCharacterCultivation);
+            
+            // 根据修为自动判断角色类型
+            let characterType = '凡人';
+            const immortalLevels = ['真仙境', '金仙境', '太乙境', '大罗境', '道祖境'];
+            if (currentCharacterCultivation !== '无') {
+                characterType = immortalLevels.includes(currentCharacterCultivation) ? '仙人' : '修仙者';
+            }
+            
+            // 更新人格特质
+            const traits = generateRandomTraits(characterType);
+            const tagsContainer = document.getElementById('personality-tags');
+            tagsContainer.innerHTML = '';
+            traits.forEach(trait => {
+                const tag = document.createElement('div');
+                tag.className = 'tag';
+                tag.textContent = trait;
+                tagsContainer.appendChild(tag);
+            });
+            
+            // 更新基础框架属性
+            const survival = Math.floor(Math.random() * 30) + 70;
+            const interest = Math.floor(Math.random() * 30) + 60;
+            const empathy = Math.floor(Math.random() * 30) + 40;
+            const recognition = Math.floor(Math.random() * 20) + 75;
+            
+            document.getElementById('survival-value').textContent = survival + '%';
+            document.getElementById('survival-progress').style.width = survival + '%';
+            document.getElementById('interest-value').textContent = interest + '%';
+            document.getElementById('interest-progress').style.width = interest + '%';
+            document.getElementById('empathy-value').textContent = empathy + '%';
+            document.getElementById('empathy-progress').style.width = empathy + '%';
+            document.getElementById('recognition-value').textContent = recognition + '%';
+            document.getElementById('recognition-progress').style.width = recognition + '%';
+            
+            // 更新角色生平
+            updateBiography(currentCharacterName, gender, year, month, day, hour, birthplace, profession, currentCharacterCultivation, characterType, survival, interest, empathy, recognition);
+            
+            // 更新五行命格图
+            updateFateChart();
+            
+            // 更新修仙境界高亮
+            highlightCultivationStage(currentCharacterCultivation);
+            
+            // 生成地域时间线
+            generateRegionTimeline();
+            
+            // 显示成功消息
+            document.getElementById('success-message').style.display = 'flex';
+            
+            // 生成因果网络
+            generateRelationshipNetwork();
+        }
+        
+        // 根据修为计算寿命
+        function calculateLifespan(level) {
+            // 凡人寿命随机1-90岁，修仙阶段寿命按比例缩减(70%-95%)确保不耗尽
+            const baseLifespan = {
+                '无': Math.floor(Math.random() * 90) + 1, // 凡人1-90岁随机
+                '炼气期': 120,
+                '筑基期': 200,
+                '结丹期': 500,
+                '元婴期': 1000,
+                '化神期': 2000,
+                '炼虚期': 5000,
+                '合体期': 10000,
+                '大乘期': 20000,
+                '真仙境': 50000,
+                '金仙境': 100000,
+                '太乙境': 200000,
+                '大罗境': 500000,
+                '道祖境': 1000000
+            };
+            const base = baseLifespan[level] || 60;
+            
+            // 修仙者和仙人寿命按70%-95%随机缩减，确保不会完全耗尽
+            if(level !== '无') {
+                const reductionRate = Math.random() * 0.25 + 0.75; // 70%-95%
+                return Math.floor(base * reductionRate);
+            }
+            return base;
+        }
+        
+        // 生成随机人格特质
+        function generateRandomTraits(characterType) {
+            let traits = [];
+            
+            if (characterType === '凡人') {
+                traits = [
+                    '勤劳朴实', '安于现状', '重视家庭', '胆小怕事', '乐善好施',
+                    '精打细算', '聪明伶俐', '保守固执', '乐观开朗', '多愁善感'
+                ];
+            } else if (characterType === '修仙者') {
+                traits = [
+                    '谨慎保守', '精于算计', '重视名声', '天资聪颖', '重情重义',
+                    '心狠手辣', '优柔寡断', '果决刚毅', '多疑善变', '忠诚可靠'
+                ];
+            } else { // 仙人
+                traits = [
+                    '超凡脱俗', '淡漠无情', '洞悉天机', '悲天悯人', '逍遥自在',
+                    '威严深重', '道法自然', '不染尘埃', '超然物外', '因果循环'
+                ];
+            }
+            
+            // 随机选择3-5个特质
+            const count = Math.floor(Math.random() * 3) + 3;
+            const selectedTraits = [];
+            
+            while(selectedTraits.length < count) {
+                const randomIndex = Math.floor(Math.random() * traits.length);
+                const trait = traits[randomIndex];
+                if(!selectedTraits.includes(trait)) {
+                    selectedTraits.push(trait);
+                }
+            }
+            
+            return selectedTraits;
+        }
+        
+        // 更新角色生平
+        function updateBiography(name, gender, year, month, day, hour, birthplace, profession, cultivationLevel, characterType, survival, interest, empathy, recognition) {
+            const genderText = gender === 'male' ? '男' : gender === 'female' ? '女' : '无性别';
+            let characterTypeClass = 'mortal-tag';
+            if(characterType === '修仙者') characterTypeClass = 'cultivator-tag';
+            if(characterType === '仙人') characterTypeClass = 'immortal-tag';
+            
+            const backgroundStories = {
+                '王朝': `修真王朝${getRandomElement(['贵族', '平民', '官员', '皇族'])}家庭`,
+                '魔域': `魔道血狱${getRandomElement(['魔修家族', '被诅咒的村落', '血祭祭坛', '暗影城堡'])}`,
+                '仙岛': `海外仙岛${getRandomElement(['修真小家族', '散修聚集地', '仙门附属', '秘境守护者'])}`,
+                '佛国': `佛国净土${getRandomElement(['寺庙', '佛修家族', '禅宗', '苦行僧村落'])}`,
+                '蛮荒': `蛮荒部落${getRandomElement(['狩猎部落', '巫族', '图腾崇拜', '原始氏族'])}`,
+                '灵界': `灵界${getRandomElement(['灵族', '元素生物', '仙灵之地', '幻境'])}`
+            };
+            
+            const background = backgroundStories[birthplace] || '普通修真家庭';
+            
+            let output = `
+                <div class="destiny-title">
+                    <i class="fas fa-scroll"></i> 角色生平
+                </div>
+                <div class="destiny-text">
+                    <p><strong>姓名：</strong>${name}（${genderText}）<span class="character-type-tag ${characterTypeClass}">${characterType}</span></p>
+                    <p><strong>生卒年份：</strong>${birthYear}年 - ${deathYear}年（寿元${deathYear - birthYear}年）</p>
+                    <p><strong>出生背景：</strong>${year}年${month}${day}日${hour}出生于${birthplace}，${background}。</p>
+                    <p><strong>职业专长：</strong>${profession === '无' ? '无特殊职业' : profession}</p>
+                    <p><strong>修为境界：</strong>${cultivationLevel === '无' ? '无修为' : cultivationLevel}</p>
+                    <p><strong>基础框架：</strong>求生本能(${survival}%), 趋利避害(${interest}%), 同理心(${empathy}%), 渴望认同(${recognition}%)</p>
+                </div>
+                <div class="destiny-text">
+                    <p><strong>生平轨迹：</strong></p>
+            `;
+            
+            // 生成人生事件
+            const events = generateLifeEvents(characterType, deathYear - birthYear);
+            
+            events.forEach(e => {
+                output += `<div class="life-event"><strong>${e.age}岁：</strong>${e.event}</div>`;
+            });
+            
+            output += `</div>`;
+            
+            // 添加命批诗句
+            const poem = getRandomElement(destinyPoems);
+            output += `
+                <div class="poem-container">
+                    <div class="poem-title">命批诗句</div>
+                    <div id="destiny-poem">${poem}</div>
+                </div>
+            `;
+            
+            document.getElementById('destiny-output').innerHTML = output;
+        }
+        
+        // 生成人生事件
+        function generateLifeEvents(characterType, lifespan) {
+            const events = [];
+            const maxAge = characterType === '凡人' ? Math.min(90, lifespan) : lifespan;
+            const eventCount = characterType === '凡人' ? 
+                Math.floor(Math.random() * 3) + 4 : // 凡人4-6个事件
+                Math.floor(Math.random() * 5) + 5; // 修仙者/仙人5-9个事件
+
+            // 凡人事件库
+            const mortalEvents = [
+                () => "呱呱坠地，哭声洪亮，被视为吉兆",
+                () => `开始接受私塾教育，展现出${getRandomElement(['过目不忘', '举一反三', '顽劣不堪'])}的特质`,
+                () => `举行成人礼，${getRandomElement(['娶妻生子', '外出闯荡', '继承家业'])}`,
+                () => `成为${getRandomElement(['农夫', '工匠', '商人', '书生', '医师'])}，兢兢业业`,
+                () => `遭遇${getRandomElement(['天灾', '人祸', '疾病', '战乱'])}，险些丧命`,
+                () => `身体日渐衰弱，开始${getRandomElement(['信佛', '修道', '含饴弄孙', '云游四方'])}`
+            ];
+
+            // 修仙者事件库
+            const cultivatorEvents = [
+                () => "意外获得修真入门功法，踏上修仙之路",
+                () => `通过宗门选拔，拜入${getRandomElement(['天剑宗', '青云门', '焚香谷', '丹霞宗'])}成为外门弟子`,
+                () => `闭关${getRandomElement(['三月', '一年', '三年', '十年'])}，成功突破到${getRandomElement(['炼气期', '筑基期', '结丹期', '元婴期'])}`,
+                () => `${getRandomElement(['秘境探险', '夺宝大战', '正邪大战'])}中遭遇重大危机，侥幸逃脱`,
+                () => `在${getRandomElement(['宗门大比', '秘境历练', '拍卖会'])}中结识道侣，结为双修伴侣`,
+                () => `在古仙府中获得${getRandomElement(['上古飞剑', '防御宝甲', '储物戒指', '疗伤圣药'])}`,
+                () => `晋升为${getRandomElement(['内门弟子', '核心弟子', '长老', '峰主'])}，权力大增`
+            ];
+
+            // 仙人事件库
+            const immortalEvents = [
+                () => `历经九重天劫，成功飞升${getRandomElement(['灵界', '仙界', '神界'])}`,
+                () => `耗费${getRandomElement(['百年', '千年', '万年'])}时间，领悟${getRandomElement(['空间', '时间', '生命', '死亡'])}法则`,
+                () => "以自身大道为基础，开辟一方小世界",
+                () => `参与仙魔大战，斩杀${getRandomElement(['魔尊', '魔君', '魔将', '魔道至尊'])}`,
+                () => `在${getRandomElement(['混沌秘境', '鸿蒙战场', '上古仙墟'])}获得无上仙缘`,
+                () => `冲击${getRandomElement(['金仙', '太乙', '大罗', '道祖'])}境界失败，兵解重修`
+            ];
+
+            // 选择对应事件库
+            const eventsLibrary = {
+                '凡人': mortalEvents,
+                '修仙者': cultivatorEvents,
+                '仙人': immortalEvents
+            }[characterType];
+            
+            // 确保有出生事件
+            events.push({
+                age: 0,
+                event: "出生于" + document.getElementById('birthplace').value
+            });
+
+            // 生成中间事件
+            for (let i = 1; i < eventCount; i++) {
+                // 年龄范围：5岁到maxAge-5岁
+                const age = Math.floor(Math.random() * (maxAge - 10)) + 5;
+                const eventFunc = getRandomElement(eventsLibrary);
+                events.push({
+                    age: age,
+                    event: eventFunc()
+                });
+            }
+            
+            // 确保有死亡事件（在寿元耗尽前）
+            let deathAge = maxAge;
+            if (characterType !== '凡人') {
+                // 修仙者/仙人在寿元耗尽前死亡（70%-95%寿元）
+                deathAge = Math.floor(maxAge * (0.70 + Math.random() * 0.25));
+            }
+            
+            // 死亡描述库
+            const deathDescriptions = {
+                "天劫": "在突破境界时遭遇天劫，身死道消",
+                "仇杀": "被宿敌围攻，力战而亡",
+                "秘境": "在探索上古秘境时遭遇空间裂缝，尸骨无存",
+                "寿终": "寿元耗尽，坐化于洞府之中",
+                "走火入魔": "修炼时走火入魔，爆体而亡",
+                "宗门大战": "在宗门大战中为保护同门，壮烈牺牲",
+                "病逝": "寿终正寝，安然离世"
+            };
+            
+            // 添加死亡事件（确保是最后一个事件）
+            events.push({
+                age: deathAge,
+                event: deathDescriptions[getRandomElement(Object.keys(deathDescriptions))]
+            });
+            
+            // 按年龄排序
+            events.sort((a, b) => a.age - b.age);
+            
+            return events;
+        }
+        
+        // 更新五行命格图
+        function updateFateChart() {
+            const elements = ['金', '木', '水', '火', '土'];
+            
+            // 生成新的五行数据
+            const newData = [];
+            for(let i = 0; i < 5; i++) {
+                newData.push(Math.floor(Math.random() * 70) + 30);
+            }
+            
+            // 更新图表数据
+            fateChart.data.datasets[0].data = newData;
+            fateChart.update();
+            
+            // 更新灵根信息
+            const spiritRoots = [
+                '金火双灵根', '水木双灵根', '土金双灵根', 
+                '雷系异灵根', '冰风异灵根', '五行混沌灵根'
+            ];
+            
+            currentSpiritRoot = getRandomElement(spiritRoots);
+            spiritRootDescription = spiritRootDescriptions[currentSpiritRoot] || "未知灵根属性";
+        }
+        
+        // 高亮当前境界
+        function highlightCultivationStage(level) {
+            const stages = document.querySelectorAll('.cultivation-stage');
+            stages.forEach(stage => {
+                stage.classList.remove('current-stage');
+                if(stage.querySelector('.stage-name').textContent === level) {
+                    stage.classList.add('current-stage');
+                }
+            });
+        }
+        
+        // 生成地域时间线
+        function generateRegionTimeline() {
+            const regions = [
+                { name: "修真王朝", color: "dynasty-badge" },
+                { name: "魔道血狱", color: "demonic-badge" },
+                { name: "海外仙岛", color: "island-badge" },
+                { name: "佛国净土", color: "buddha-badge" },
+                { name: "蛮荒部落", color: "tribal-badge" },
+                { name: "灵界", color: "cultivator-badge" }
+            ];
+            
+            const timelineContainer = document.getElementById('region-timeline');
+            timelineContainer.innerHTML = '';
+            
+            // 确保包含出生地
+            const birthplace = document.getElementById('birthplace').value;
+            const startYear = birthYear;
+            const endYear = deathYear;
+            const lifespan = endYear - startYear;
+            
+            // 生成地域事件
+            const regionEvents = [];
+            const regionCount = Math.floor(Math.random() * 4) + 3; // 3-6个地域
+            
+            // 添加出生地
+            regionEvents.push({
+                name: birthplace,
+                start: startYear,
+                end: startYear + Math.floor(lifespan * 0.3),
+                description: `${currentCharacterName}在此出生并度过童年，${getRandomElement([
+                    '此地灵气充沛，为修炼打下良好基础',
+                    '期间遭遇妖兽袭击，被神秘修士所救',
+                    '家族在此地颇有势力，获得良好资源',
+                    '此地环境险恶，磨练出坚韧性格'
+                ])}`
+            });
+            
+            // 生成其他地域
+            for (let i = 1; i < regionCount; i++) {
+                const prevRegion = regionEvents[i - 1];
+                const start = prevRegion.end + Math.floor(Math.random() * 10);
+                const duration = Math.floor(Math.random() * (lifespan * 0.4)) + (lifespan * 0.1);
+                const end = Math.min(start + duration, endYear - 5);
+                
+                if (end >= endYear) break;
+                
+                const region = getRandomElement(regions.filter(r => r.name !== prevRegion.name));
+                
+                regionEvents.push({
+                    name: region.name,
+                    start: start,
+                    end: end,
+                    description: regionDescriptions[region.name],
+                    color: region.color
+                });
+            }
+            
+            // 确保有死亡地点
+            const lastRegion = regionEvents[regionEvents.length - 1];
+            regionEvents.push({
+                name: lastRegion.name,
+                start: lastRegion.end,
+                end: endYear,
+                description: deathDescriptions[getRandomElement(Object.keys(deathDescriptions))]
+            });
+            
+            // 生成时间线HTML
+            regionEvents.forEach(event => {
+                const eventElement = document.createElement('div');
+                eventElement.className = 'region-event';
+                eventElement.innerHTML = `
+                    <div class="region-name">
+                        <i class="fas fa-map-marker-alt"></i> ${event.name}
+                    </div>
+                    <div class="region-period">${event.start}-${event.end}年</div>
+                    <div class="region-description">
+                        ${event.description}
+                    </div>
+                `;
+                timelineContainer.appendChild(eventElement);
+            });
+        }
+        
+        // 地域描述库
+        const regionDescriptions = {
+            "修真王朝": `${getRandomElement([
+                '加入王朝军队，参与边疆防御战',
+                '成为皇室客卿，获得丰厚修炼资源',
+                '卷入宫廷斗争，险遭暗算',
+                '发现王朝龙脉，修为大进'
+            ])}`,
+            "魔道血狱": `${getRandomElement([
+                '被魔修俘虏，被迫修炼魔功',
+                '潜入魔宗当卧底，获取重要情报',
+                '为救挚友独闯魔窟，身负重伤',
+                '与魔道天骄论道，收获颇丰'
+            ])}`,
+            "海外仙岛": `${getRandomElement([
+                '探索海底秘境，获得上古仙器',
+                '遭遇海妖袭击，九死一生',
+                '结识鲛人族，习得水系神通',
+                '发现浮空仙岛，获得神秘传承'
+            ])}`,
+            "佛国净土": `${getRandomElement([
+                '聆听高僧讲道，净化心魔',
+                '参与佛法辩论，悟透禅机',
+                '镇压魔佛叛乱，守护佛国安宁',
+                '获得佛骨舍利，修成金身'
+            ])}`,
+            "蛮荒部落": `${getRandomElement([
+                '被蛮族俘虏，成为部落巫医',
+                '参加蛮族成年礼，获得图腾认可',
+                '化解部落纷争，被奉为贵宾',
+                '探索远古祭坛，唤醒沉睡古兽'
+            ])}`,
+            "灵界": `${getRandomElement([
+                '与灵族签订契约，获得元素之力',
+                '修复破损的灵界通道，阻止灾难',
+                '参加灵界试炼，突破修为瓶颈',
+                '发现灵界本源，参悟天地法则'
+            ])}`
+        };
+        
+        // 死亡描述库
+        const deathDescriptions = {
+            "天劫": "在突破境界时遭遇天劫，身死道消",
+            "仇杀": "被宿敌围攻，力战而亡",
+            "秘境": "在探索上古秘境时遭遇空间裂缝，尸骨无存",
+            "寿终": "寿元耗尽，坐化于洞府之中",
+            "走火入魔": "修炼时走火入魔，爆体而亡",
+            "宗门大战": "在宗门大战中为保护同门，壮烈牺牲",
+            "病逝": "寿终正寝，安然离世"
+        };
+        
+        // 生成关系网络
+        function generateRelationshipNetwork() {
+            const container = document.getElementById('network-container');
+            container.innerHTML = '';
+            
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            
+            const svg = d3.select(container)
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height);
+            
+            // 随机选择3-7种关系
+            const relationCount = Math.floor(Math.random() * 5) + 3;
+            const selectedRelations = [];
+            const relationTypesCopy = [...relationTypes];
+            
+            while(selectedRelations.length < relationCount) {
+                const randomIndex = Math.floor(Math.random() * relationTypesCopy.length);
+                selectedRelations.push(relationTypesCopy[randomIndex]);
+                relationTypesCopy.splice(randomIndex, 1);
+            }
+            
+            // 创建节点数据
+            const nodes = [
+                { 
+                    id: "player", 
+                    name: currentCharacterName, 
+                    type: "当前角色", 
+                    color: "#ff79c6", 
+                    birth: birthYear,
+                    death: deathYear,
+                    cultivation: currentCharacterCultivation
+                }
+            ];
+            
+            // 创建连接数据
+            const links = [];
+            
+            // 添加关系节点
+            selectedRelations.forEach((relation, index) => {
+                // 获取关系名称
+                const relationName = getRandomName(relation.type);
+                
+                // 生成关系角色的生卒年份
+                const relationBirth = birthYear + Math.floor(Math.random() * 50) - 25;
+                // 根据当前角色修为确定关系角色的修为范围
+                const cultivationStages = ['无', '炼气期', '筑基期', '结丹期', '元婴期', '化神期', '炼虚期', '合体期', '大乘期', '真仙境'];
+                const maxStageIndex = cultivationStages.indexOf(currentCharacterCultivation);
+                const availableStages = cultivationStages.slice(0, maxStageIndex + 1);
+                const relationCultivation = getRandomElement(availableStages);
+                const relationDeath = relationBirth + calculateLifespan(relationCultivation);
+                
+                const nodeId = `node${index}`;
+                nodes.push({
+                    id: nodeId, 
+                    name: relationName, 
+                    type: relation.name, 
+                    color: relation.color, 
+                    relationType: relation.type,
+                    birth: relationBirth,
+                    death: relationDeath,
+                    cultivation: relationCultivation
+                });
+                
+                // 添加连接到主角
+                links.push({
+                    source: "player", 
+                    target: nodeId, 
+                    color: relation.color,
+                    type: relation.type
+                });
+                
+                // 添加第二层关系节点
+                const subRelationCount = Math.floor(Math.random() * 2) + 1; // 1-2个子关系
+                
+                for(let s = 0; s < subRelationCount; s++) {
+                    const subRelation = getRandomElement(relationTypes.filter(r => r.type !== relation.type));
+                    const subRelationName = getRandomName(subRelation.type);
+                    
+                    const subRelationBirth = relationBirth + Math.floor(Math.random() * 40) - 20;
+                    // 子节点修为不超过父节点
+                    const parentStageIndex = cultivationStages.indexOf(relationCultivation);
+                    const subAvailableStages = cultivationStages.slice(0, parentStageIndex + 1);
+                    const subRelationCultivation = getRandomElement(subAvailableStages);
+                    const subRelationDeath = subRelationBirth + calculateLifespan(subRelationCultivation);
+                    
+                    const subNodeId = `node${index}_sub${s}`;
+                    nodes.push({
+                        id: subNodeId, 
+                        name: subRelationName, 
+                        type: subRelation.name, 
+                        color: subRelation.color, 
+                        relationType: subRelation.type,
+                        birth: subRelationBirth,
+                        death: subRelationDeath,
+                        isSecondary: true,
+                        cultivation: subRelationCultivation
+                    });
+                    
+                    // 添加连接到父节点
+                    links.push({
+                        source: nodeId, 
+                        target: subNodeId, 
+                        color: subRelation.color, 
+                        strokeDasharray: "5,5",
+                        type: subRelation.type
+                    });
+                }
+            });
+            
+            // 随机添加一些额外关系（节点之间）
+            if(selectedRelations.length > 1) {
+                const extraRelations = Math.floor(Math.random() * 3);
+                for(let i = 0; i < extraRelations; i++) {
+                    const sourceIndex = Math.floor(Math.random() * selectedRelations.length);
+                    const targetIndex = Math.floor(Math.random() * selectedRelations.length);
+                    if(sourceIndex !== targetIndex) {
+                        links.push({ 
+                            source: `node${sourceIndex}`, 
+                            target: `node${targetIndex}`, 
+                            color: getRandomElement(['#bd93f9', '#8be9fd', '#ff5555', '#50fa7b']),
+                            type: "机缘"
+                        });
+                    }
+                }
+            }
+            
+            // 创建力导向图模拟
+            if (simulation) {
+                simulation.stop();
+            }
+            
+            simulation = d3.forceSimulation(nodes)
+                .force("link", d3.forceLink(links).id(d => d.id).distance(120))
+                .force("charge", d3.forceManyBody().strength(-300))
+                .force("center", d3.forceCenter(width / 2, height / 2))
+                .force("collision", d3.forceCollide().radius(35));
+            
+            // 创建线条
+            const link = svg.append("g")
+                .attr("class", "links")
+                .selectAll("line")
+                .data(links)
+                .enter().append("line")
+                .attr("class", "link")
+                .attr("stroke", d => d.color)
+                .attr("stroke-width", 2);
+            
+            // 添加连接线标签
+            const linkLabels = svg.append("g")
+                .attr("class", "link-labels")
+                .selectAll("text")
+                .data(links)
+                .enter().append("text")
+                .attr("class", "link-label")
+                .text(d => d.type);
+            
+            // 创建节点
+            const node = svg.append("g")
+                .attr("class", "nodes")
+                .selectAll("g")
+                .data(nodes)
+                .enter().append("g")
+                .attr("class", "node")
+                .call(d3.drag()
+                    .on("start", dragstarted)
+                    .on("drag", dragged)
+                    .on("end", dragended)
+                )
+                .on("click", function(event, d) {
+                    showCharacterModal(d);
+                })
+                .on("mouseover", function(event, d) {
+                    showTooltip(event, d);
+                })
+                .on("mouseout", function() {
+                    hideTooltip();
+                });
+            
+            // 添加节点圆圈
+            node.append("circle")
+                .attr("r", d => d.id === "player" ? 30 : d.isSecondary ? 20 : 25)
+                .attr("fill", d => d.color)
+                .attr("stroke", "#fff")
+                .attr("stroke-width", 2);
+            
+            // 添加节点文字
+            node.append("text")
+                .attr("class", "node-text")
+                .attr("dy", d => d.id === "player" ? 0 : d.isSecondary ? -8 : -5)
+                .text(d => d.name);
+            
+            // 添加修为文字
+            node.append("text")
+                .attr("class", "node-cultivation")
+                .attr("dy", d => d.id === "player" ? 15 : d.isSecondary ? 10 : 15)
+                .text(d => d.cultivation);
+            
+            // 更新连接线位置
+            simulation.on("tick", () => {
+                link
+                    .attr("x1", d => d.source.x)
+                    .attr("y1", d => d.source.y)
+                    .attr("x2", d => d.target.x)
+                    .attr("y2", d => d.target.y);
+                
+                linkLabels
+                    .attr("x", d => (d.source.x + d.target.x) / 2)
+                    .attr("y", d => (d.source.y + d.target.y) / 2);
+                
+                node
+                    .attr("transform", d => `translate(${d.x},${d.y})`);
+            });
+        }
+        
+        // 拖拽函数
+        function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+        
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+        
+        function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+        }
+        
+        // 显示工具提示
+        function showTooltip(event, d) {
+            const tooltip = document.getElementById('relation-tooltip');
+            tooltip.innerHTML = `
+                <div class="tooltip-title">${d.name}</div>
+                <div class="tooltip-content">
+                    <div>修为: ${d.cultivation}</div>
+                    <div>生卒: ${d.birth}年 - ${d.death}年</div>
+                    <div>关系: ${d.type}</div>
+                </div>
+            `;
+            tooltip.style.display = 'block';
+            tooltip.style.left = (event.pageX + 10) + 'px';
+            tooltip.style.top = (event.pageY + 10) + 'px';
+        }
+        
+        function hideTooltip() {
+            const tooltip = document.getElementById('relation-tooltip');
+            tooltip.style.display = 'none';
+        }
+        
+        // 获取随机名称
+        function getRandomName(relationType) {
+            // 根据关系类型获取名称
+            const names = {
+                '师徒': ['玄尘道长', '玉虚真人', '清虚上人', '天机老人', '紫阳真人'],
+                '道侣': ['云瑶仙子', '凌霜仙子', '青鸾仙子', '月华仙子', '紫霞仙子'],
+                '同门': ['秦风', '林月如', '楚瑶', '萧天', '赵飞燕'],
+                '仇敌': ['幽冥老魔', '血煞老祖', '阴风老怪', '黑山老妖', '白骨夫人'],
+                '血缘': ['凌远山(父)', '柳如烟(母)', '凌雨(妹)', '凌峰(弟)', '凌霄(祖父)'],
+                '恩人': ['清风道长', '明月禅师', '碧云师太', '灵溪上人', '玄阳真人'],
+                '盟友': ['龙啸天', '凤清瑶', '玄武真人', '朱雀圣女', '白虎战神'],
+                '宿敌': ['古魔', '王蝉', '六道极圣', '灭世魔尊', '修罗王']
+            };
+            
+            return names[relationType][Math.floor(Math.random() * names[relationType].length)];
+        }
+        
+        // 获取随机元素
+        function getRandomElement(array) {
+            return array[Math.floor(Math.random() * array.length)];
+        }
+        
+        // 显示角色模态框
+        function showCharacterModal(nodeData) {
+            // 获取关系类型
+            const relationType = nodeData.relationType || "当前角色";
+            
+            // 获取关系名称
+            const relationName = nodeData.name;
+            
+            // 生成随机故事
+            const stories = {
+                '师徒': [
+                    `${relationName}传授${currentCharacterName}修炼功法，助其踏上仙途`,
+                    `${currentCharacterName}在${relationName}指导下突破境界瓶颈`,
+                    `${relationName}为救${currentCharacterName}而陨落，临终前传授毕生功力`
+                ],
+                '道侣': [
+                    `${currentCharacterName}与${relationName}在秘境中相遇，结为道侣`,
+                    `${relationName}为${currentCharacterName}炼制本命法宝，耗尽心血`,
+                    `${currentCharacterName}与${relationName}双修千年，共同参悟大道`
+                ],
+                '同门': [
+                    `${currentCharacterName}与${relationName}在宗门大比中相识，结为挚友`,
+                    `${relationName}在${currentCharacterName}遇险时出手相救`,
+                    `${currentCharacterName}与${relationName}共同探索上古遗迹，获得奇遇`
+                ],
+                '仇敌': [
+                    `${relationName}杀害${currentCharacterName}的亲人，结下血海深仇`,
+                    `${currentCharacterName}在秘境中夺走${relationName}的机缘，被其追杀`,
+                    `${relationName}暗算${currentCharacterName}，导致其修为大损`
+                ],
+                '血缘': [
+                    `${relationName}是${currentCharacterName}的至亲，在其幼年时悉心照料`,
+                    `${currentCharacterName}为救${relationName}深入险境，寻找灵药`,
+                    `${relationName}将家族秘传功法传授给${currentCharacterName}`
+                ],
+                '恩人': [
+                    `${relationName}在${currentCharacterName}危难时出手相救`,
+                    `${relationName}赠予${currentCharacterName}珍贵功法，改变其命运`,
+                    `${currentCharacterName}为报${relationName}的恩情，为其护法百年`
+                ],
+                '盟友': [
+                    `${currentCharacterName}与${relationName}结盟对抗强敌`,
+                    `${relationName}为${currentCharacterName}提供重要情报，助其脱险`,
+                    `${currentCharacterName}与${relationName}互换修炼心得，共同进步`
+                ],
+                '宿敌': [
+                    `${relationName}与${currentCharacterName}是宿命之敌，九世轮回皆为仇敌`,
+                    `${currentCharacterName}破坏${relationName}的飞升大计，结下不解之仇`,
+                    `${relationName}为夺${currentCharacterName}的机缘，多次设计暗算`
+                ],
+                '当前角色': [
+                    `${currentCharacterName}是修仙界冉冉升起的新星`,
+                    `${currentCharacterName}身怀特殊灵根，修炼速度远超常人`,
+                    `${currentCharacterName}背负着神秘使命，在修仙界闯荡`
+                ]
+            };
+            
+            const story = getRandomElement(stories[relationType]);
+            
+            // 更新模态框标题
+            document.querySelector('.modal-title').textContent = `${relationName} - ${nodeData.type}`;
+            
+            // 生成随机人格特质
+            const characterType = nodeData.cultivation === '无' ? '凡人' : 
+                                 ['真仙境','金仙境','太乙境','大罗境','道祖境'].includes(nodeData.cultivation) ? '仙人' : '修仙者';
+            const traits = generateRandomTraits(characterType);
+            
+            // 更新模态框内容
+            const modalContent = `
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div style="font-size: 1.1rem; color: var(--text-secondary);">
+                        生卒: ${nodeData.birth}年 - ${nodeData.death}年
+                    </div>
+                    <div style="font-size: 1.1rem; color: var(--text-secondary); margin-top: 5px;">
+                        修为: <span class="highlight">${nodeData.cultivation}</span>
+                    </div>
+                </div>
+                
+                <div class="character-details-grid">
+                    <div class="detail-card">
+                        <h3><i class="fas fa-info-circle"></i> 基本信息</h3>
+                        <p><strong>关系类型：</strong>${nodeData.type}</p>
+                        <p><strong>关系强度：</strong>${Math.floor(Math.random() * 30) + 70}%</p>
+                        <p><strong>首次相遇：</strong>${Math.floor(Math.random() * 100)}年前</p>
+                    </div>
+                    
+                    <div class="detail-card">
+                        <h3><i class="fas fa-tags"></i> 角色属性</h3>
+                        <p><strong>所属势力：</strong> ${getRandomElement(['天剑宗', '玄冥教', '紫霄宫', '青云门', '万魔殿'])}</p>
+                        <p><strong>当前状态：</strong> ${getRandomElement(['云游四海', '闭关修炼', '宗门长老', '一宗之主', '隐世不出'])}</p>
+                    </div>
+                </div>
+                
+                <div style="margin: 20px 0 15px; font-weight: bold; color: #bb86fc;">
+                    人格特质:
+                </div>
+                <div class="personality-tags">
+                    ${traits.map(trait => `<div class="personality-tag">${trait}</div>`).join('')}
+                </div>
+                
+                <div class="framework-panel">
+                    <div class="framework-title">
+                        <i class="fas fa-brain"></i> 人性基础框架
+                    </div>
+                    <div class="framework-item">
+                        <div class="framework-label">
+                            <span>求生本能</span>
+                            <span>${Math.floor(Math.random() * 30) + 70}%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill survival-progress" style="width: ${Math.floor(Math.random() * 30) + 70}%"></div>
+                        </div>
+                    </div>
+                    <div class="framework-item">
+                        <div class="framework-label">
+                            <span>趋利避害</span>
+                            <span>${Math.floor(Math.random() * 30) + 60}%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill interest-progress" style="width: ${Math.floor(Math.random() * 30) + 60}%"></div>
+                        </div>
+                    </div>
+                    <div class="framework-item">
+                        <div class="framework-label">
+                            <span>同理心</span>
+                            <span>${Math.floor(Math.random() * 30) + 40}%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill empathy-progress" style="width: ${Math.floor(Math.random() * 30) + 40}%"></div>
+                        </div>
+                    </div>
+                    <div class="framework-item">
+                        <div class="framework-label">
+                            <span>渴望认同</span>
+                            <span>${Math.floor(Math.random() * 20) + 75}%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill recognition-progress" style="width: ${Math.floor(Math.random() * 20) + 75}%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 25px;">
+                    <div style="font-weight: bold; color: #bb86fc; margin-bottom: 10px;">
+                        与${currentCharacterName}的因果:
+                    </div>
+                    <div style="padding: 15px; background: rgba(94, 53, 177, 0.1); border-radius: 10px;">
+                        ${story}
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('modal-content').innerHTML = modalContent;
+            document.getElementById('character-modal').style.display = "flex";
+        }
+        
+        // 显示灵根模态框
+        function showSpiritRootModal() {
+            document.getElementById('spirit-root-title').textContent = currentSpiritRoot;
+            document.getElementById('spirit-root-description').textContent = spiritRootDescription;
+            document.getElementById('spirit-root-modal').style.display = "flex";
+        }
+        
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            initCharts();
+            initEventListeners();
+            // 初始生成一个NPC
+            generateNPC();
+        });
+    </script>
+</body>
+</html>
